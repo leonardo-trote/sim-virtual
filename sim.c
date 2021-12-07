@@ -7,7 +7,7 @@ Ricardo Matheus de Oliveira Amaral		1621644
 #include <stdlib.h>
 #include "sim.h"
 
-int time, nPages;
+int time = 0, nPages;
 
 
 void checkInput(char* alg, int pageSize, int memorySize){
@@ -41,18 +41,18 @@ int * createPagesArray(int nPages){
 
 }
 
-pageTable* createTablePages(int pageSize){
+Frame* createTablePages(int pageSize){
 
+    int offset = (int)(ceil(log2(pageSize*1000)));
+    int nTables = pow(2,32 - offset); 
 
-    int nTables = pow(2,33); //corrigir valor (n entendi)
-
-    pageTable* tbps = (pageTable*) malloc(sizeof(pageTable)*nTables);
+    Frame* tbps = (Frame*) malloc(sizeof(Frame)*nTables);
     
     for(int i = 0; i < nTables; i++){
 
         //setando os valores padrao
         tbps[i].R = 0;
-        tbps[i].R = 0;
+        tbps[i].M = 0;
         tbps[i].lastAcess = -1; //ainda nao foi acessada
         tbps[i].indexPage = -1; //ainda nao ta na memoria
     }
@@ -61,49 +61,37 @@ pageTable* createTablePages(int pageSize){
 }
 
 
-void deletePage(pageTable* tablePages, int* pages, indexPage, indexTable){
+int pageNRU(Frame* tablePages, int* pages, int nPages){
 
-    
-
-
-}
+    int c1_index = 0, c2_index = 0, c3_index = 0, c4_index = 0;
 
 
-
-int pageNRU(pageTable* tablePages, int* pages, int nPages){
-
-    int c1_index = 0; 
-    int c2_index = 0;
-    int c3_index = 0;
-    int c4_index = 0;
-
-
-    int c1 = createTablePages(nPages); //classe 1 - não referenciada, não modificada
-    int c2 = createTablePages(nPages); //classe 2 - não referenciada, modificada
-    int c3 = createTablePages(nPages); //classe 3 - referenciada, não modificada
-    int c4 = createTablePages(nPages); //classe 4 - referenciada, modificada
+    int c1 = createTablePages(nPages); //classe 1 - não referenciada, não modificada (00)
+    int c2 = createTablePages(nPages); //classe 2 - não referenciada, modificada (01)
+    int c3 = createTablePages(nPages); //classe 3 - referenciada, não modificada (10)
+    int c4 = createTablePages(nPages); //classe 4 - referenciada, modificada (11)
 
     for (int i = 0; i < nPages; i++){
         
         int current_page = pages[i];
         
         if (tablePages[current_page].R == 0 && tablePages[current_page].M == 0){ //c1 (r = 0, m = 0)
-            c1[c1_index] = i;
+            
             c1_index++;
         }
 
         else if (tablePages[current_page].R == 0 && tablePages[current_page].M == 1){ //c1 (r = 0, m = 1)
-            c2[c2_index] = i;
+            
             c2_index++;
         }
 
         else if (tablePages[current_page].R == 1 && tablePages[current_page].M == 0){ //c1 (r = 1, m = 0)
-            c3[c3_index] = i;
+            
             c3_index++;   
         }
 
         else{ //c1 (r = 1, m = 1)
-            c4[c4_index] = i;
+           
             c4_index++;
         }
     }
