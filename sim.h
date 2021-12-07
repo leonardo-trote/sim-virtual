@@ -1,4 +1,4 @@
-typedef struct pageTable{
+typedef struct frame{
 
     int R;
     int M;
@@ -6,4 +6,4 @@ typedef struct pageTable{
 
     int indexPage;
 
-} pageTable;
+} Frame;
