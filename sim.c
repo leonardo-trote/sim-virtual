@@ -142,7 +142,8 @@ int search_index_NRU(Frame* tablePages, int* pages, int nPages){
     pos = indexRandom(size_index);
     return vet[pos];
 }
-/*
+
+
 int pageFIFO2(Frame* tablePages, int* pages, int nPages){
 
     //o bit R do primeiro (mais antigo) indice da lista é 0, entao remove esse mesmo
@@ -150,10 +151,11 @@ int pageFIFO2(Frame* tablePages, int* pages, int nPages){
         return 0; //esse é o indice da pagina que vai ser removid0
     }
 
-    //se for 1, então limpa e coloca no final
+
     
 
-    for (i = 0; i< nPages; i++){
+    //se for 1, então limpa e coloca no final
+    for (int i = 0; i< nPages; i++){
 
         int current_page = pages[i];
         if (tablePages[current_page].R == 1){
@@ -164,26 +166,34 @@ int pageFIFO2(Frame* tablePages, int* pages, int nPages){
 
 
     }
+}
 
 
 
 
 
+
+
+int pageLFU(Frame* tablePages, int* pages, int nPages){
+
+
+    int smallerFrequency = -1;
+    int smallerIndex = 0;
+
+    //percote todas as paginas e retorna o index da que tem menor frequencia
+    for(int i = 0; i < nPages; i++){
+        
+        int current_page = pages[i];
+
+        if (tablePages[current_page].frequency < smallerFrequency){
+
+            smallerFrequency = tablePages[current_page].frequency;
+            smallerIndex = i;
+        }
     }
-
-
-
-
-
-    
+    return smallerIndex;
 }
 
-
-int pageLFU(){
-
-    
-}
-*/
 void reset_bits(Frame* tablePages, int * pages, int nPages){
     int index_TPage;
     for (int i = 0; i < nPages; i++){
@@ -238,8 +248,8 @@ void run_simulator(FILE *arqE, char* type, int size_page, int size_memory){
             }
             else{ // precisa remover
                 int index_Vpage;
-                if (!strcmp(type, "NRU")){
-                    index_Vpage = search_index_NRU(tablePages, pages, n_pages);
+                if (!strcmp(type, "LFU")){
+                    index_Vpage = pageLFU(tablePages, pages, n_pages);
                 }
                 int aux = pages[index_Vpage];
                 if (tablePages[aux].M == 1){
