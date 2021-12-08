@@ -141,6 +141,11 @@ int search_index_NRU(Frame* tablePages, int* pages, int nPages){
 
 int pageFIFO2(){
 
+
+
+
+
+
     
 }
 
@@ -159,13 +164,20 @@ void reset_bits(Frame* tablePages, int * pages, int nPages){
         }
     }
 }
+void remove_page(Frame* tablePages, int * pages, int index_Tpage, int index_Vpage){
+    tablePages[pages[index_Vpage]].R = 0;
+    tablePages[pages[index_Vpage]].M = 0;
+    tablePages[pages[index_Vpage]].lastAcess = -1;
+    tablePages[index_Tpage].indexPage = pages[index_Vpage];
+    pages[index_Vpage] = index_Tpage;
+}
 
 void run_simulator(FILE *arqE, char* type, int size_page, int size_memory){
     //n_pages = Quantidade de páginas.
     int index_Tpage, 
         n_pages,
         in_memory,
-        offset = (int)(ceil(log2(size_page * 1000))),
+        offset = (int)(ceil(log2(size_page * 1024))), // 1 MB = 1024KB
         time_zeroBits = 0,
         n_pos = 0,
         runtime = 0;
@@ -174,9 +186,10 @@ void run_simulator(FILE *arqE, char* type, int size_page, int size_memory){
     int* pages;
     Frame* tablePages;
 
-    n_pages = (size_memory * 1000) / size_page;
+    n_pages = (size_memory * 1024) / size_page;
     tablePages = createTable(size_page);
     pages = createPages(n_pages);
+
     while(fscanf(arqE, "%x %c", &addr, &rw) == 2) {
         if (!strcmp(type,"NRU") && time_zeroBits == N){
             reset_bits(tablePages, pages, n_pages);
@@ -197,9 +210,8 @@ void run_simulator(FILE *arqE, char* type, int size_page, int size_memory){
                     index_Vpage = search_index_NRU(tablePages, pages, n_pages);
                 }
                 aux = pages[index_Vpage];
-                //função para remover a página 
+                remove_page(tablePages, pages, index_Tpage, index_Vpage); 
             }
-
         }
         tablePages[index_Tpage].R = 1;
         if (!strcmp(rw, "W")){
