@@ -11,13 +11,13 @@ Ricardo Matheus de Oliveira Amaral		1621644
 #include "sim.h"
 
 #define N 32 // leituras para zerar o bit no NRU.
+int runtime = 0;
 
-int t_time = 0, nPages;
 
 
 void checkInput(char* alg, int pageSize, int memorySize){
 
-    if (strcmp(alg,"NRU") != 0 && strcmp(alg,"FIFO2") != 0 && strcmp(alg,"LFU") != 0){
+    if (strcmp(alg,"NRU") != 0 && strcmp(alg,"FIFO") != 0 && strcmp(alg,"LFU") != 0){
         printf("Algoritmo inválido. Deve ser NRU, FIFO2 ou LFU\n");
         exit(1);
     }
@@ -145,44 +145,42 @@ int search_index_NRU(Frame* tablePages, int* pages, int nPages){
 }
 
 int pageFIFO2(Frame* tablePages, int* pages, int nPages){
-
-    //o bit R do primeiro (mais antigo) indice da lista é 0, entao remove esse mesmo
-    if (tablePages[pages[0]].R == 0){
-        return 0; //esse é o indice da pagina que vai ser removid0
-    }    
-
-    //se for 1, então limpa e coloca no final
-    for (int i = 0; i< nPages; i++){
-
-        int current_page = pages[i];
-        if (tablePages[current_page].R == 1){
-
-
+    int smallerIndex = 0;
+    int current_page = pages[0];
+    int time_menor = tablePages[current_page].lastAcess;
+    while (1){
+        for (int i = 0; i < nPages; i++){
+            current_page = pages[i];
+            if (time_menor > tablePages[current_page].lastAcess){
+                smallerIndex = i;
+                time_menor = tablePages[current_page].lastAcess;
+            }
         }
-
-
-
+        current_page = pages[smallerIndex];
+        if (tablePages[current_page].R != 0){
+            tablePages[current_page].R = 0;
+            tablePages[current_page].lastAcess = runtime;            
+        }
+        else{
+            return smallerIndex;
+        }
+        
     }
 }
 
 
-
-
-
-
-
 int pageLFU(Frame* tablePages, int* pages, int nPages){
-
-    int smallerFrequency = -1;
+    
     int smallerIndex = 0;
+    int current_page = pages[0];
+    int smallerFrequency = tablePages[current_page].frequency;
 
     //percote todas as paginas e retorna o index da que tem menor frequencia
     for(int i = 0; i < nPages; i++){
         
-        int current_page = pages[i];
+        current_page = pages[i];
 
         if (tablePages[current_page].frequency < smallerFrequency){
-
             smallerFrequency = tablePages[current_page].frequency;
             smallerIndex = i;
         }
@@ -215,7 +213,7 @@ void run_simulator(FILE *arqE, char* type, int size_page, int size_memory){
         offset = (int)(ceil(log2(size_page * 1024))), // 1 MB = 1024KB
         time_zeroBits = 0,
         n_pos = 0,
-        runtime = 0,
+        //runtime = 0,
         n_missingPages = 0,
         n_writtenPages = 0;
     unsigned int addr;
@@ -247,6 +245,12 @@ void run_simulator(FILE *arqE, char* type, int size_page, int size_memory){
                 if (!strcmp(type, "LFU")){
                     index_Vpage = pageLFU(tablePages, pages, n_pages);
                 }
+                else if (!strcmp(type, "NRU")){
+                    index_Vpage = search_index_NRU(tablePages, pages, n_pages);
+                }
+                else if (!strcmp(type, "FIFO")){
+                    index_Vpage = pageFIFO2(tablePages, pages, n_pages);   
+                }
                 int aux = pages[index_Vpage];
                 if (tablePages[aux].M == 1){
                     n_writtenPages++;
@@ -269,14 +273,14 @@ void run_simulator(FILE *arqE, char* type, int size_page, int size_memory){
     printf("Número de Faltas de Páginas: %d\n", n_missingPages);
     printf("Número de Páginas Escritas: %d\n", n_writtenPages);
     //3free(pages);
-    free(tablePages);
+    //free(tablePages);
      //Ta dando erro aqui mas não sei o porquê.
 }
 
 int main(int argc, char *argv[]) {
 	
 	FILE *arqE;
-	char type[4], caminho[50] = "testes/";
+	char *type, caminho[50] = "testes/";
 	int size_page, size_memory;
 
 	if(argc < 5) {
@@ -285,18 +289,19 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 
+    type = (char*)malloc(strlen(argv[1]) + 1);
 	strcpy(type, argv[1]);
 	size_page = atoi(argv[3]); 
 	size_memory = atoi(argv[4]);
-	strcat(caminho, argv[2]);
+    strcat(caminho, argv[2]);
 	arqE = fopen(caminho,"r");
     printf("%s\n",caminho);
 	if (!arqE) {
     	printf("Erro ao abrir arquivo!\n");
     	exit(1);
 	}
+    checkInput(type, size_page, size_memory);
 	
-	checkInput(type, size_page, size_memory);
 
 	printf("\nExecutando o simulador...\n");
 	printf("Arquivo de entrada: %s\n", argv[2]);
