@@ -150,6 +150,16 @@ int pageLFU(){
     
 }
 
+void reset_bits(Frame* tablePages, int * pages, int nPages){
+    int index_TPage;
+    for (int i = 0; i < nPages; i++){
+        index_TPage = pages[i];
+        if (index_TPage != -1){
+            tablePages[index_TPage].R = 0;
+        }
+    }
+}
+
 void run_simulator(FILE *arqE, char* type, int size_page, int size_memory){
     //n_pages = Quantidade de páginas.
     int index_Tpage, 
@@ -163,13 +173,13 @@ void run_simulator(FILE *arqE, char* type, int size_page, int size_memory){
 	char rw;
     int* pages;
     Frame* tablePages;
-    
+
     n_pages = (size_memory * 1000) / size_page;
     tablePages = createTable(size_page);
     pages = createPages(n_pages);
     while(fscanf(arqE, "%x %c", &addr, &rw) == 2) {
         if (!strcmp(type,"NRU") && time_zeroBits == N){
-            //código para zerar os bits
+            reset_bits(tablePages, pages, n_pages);
             time_zeroBits = 0;
         }
         index_Tpage = addr >> offset;
@@ -199,6 +209,7 @@ void run_simulator(FILE *arqE, char* type, int size_page, int size_memory){
         time_zeroBits++;
         runtime++;
     }
+    //printar informações necessárias para o trabalho.
     free(tablePages);
     free(pages);
 }
