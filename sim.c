@@ -5,9 +5,10 @@ Ricardo Matheus de Oliveira Amaral		1621644
 
 #include <stdio.h>
 #include <stdlib.h>
+#include<time.h>
 #include "sim.h"
 
-int time = 0, nPages;
+int t_time = 0, nPages;
 
 
 void checkInput(char* alg, int pageSize, int memorySize){
@@ -42,6 +43,14 @@ int * createPages(int nPages){
 
 }
 
+//verifica se a lista de páginas está vazia.
+int emptyPages(int *pages){
+    if (pages[0] == -1){
+        return 1;
+    }
+    return 0;
+}
+
 Frame * createTable(int pageSize){
 
     int offset = (int)(ceil(log2(pageSize*1000)));
@@ -61,16 +70,22 @@ Frame * createTable(int pageSize){
     return tbps;
 }
 
-//retorna a pagina que nao foi usada recentemente
+//Retorna um index aleatorio
+int indexRandom(int n){
+    srand(time(NULL));
+    return rand() % n;
+}
+
+//retorna a pagina da classe menos 'importante' de forma aleatória
 int NRU(Frame* tablePages, int* pages, int nPages){
 
-    int c0_index = 0, c1_index = 0, c2_index = 0, c3_index = 0;
+    int c0_index = 0, c1_index = 0, c2_index = 0, c3_index = 0; // tamanho dos vetores.
 
 
     int *c0 = createPages(nPages); //classe 1 - não referenciada, não modificada (00)
-    int * c1 = createPages(nPages); //classe 2 - não referenciada, modificada (01)
-    int * c2 = createPages(nPages); //classe 3 - referenciada, não modificada (10)
-    int * c3 = createPages(nPages); //classe 4 - referenciada, modificada (11)
+    int *c1 = createPages(nPages); //classe 2 - não referenciada, modificada (01)
+    int *c2 = createPages(nPages); //classe 3 - referenciada, não modificada (10)
+    int *c3 = createPages(nPages); //classe 4 - referenciada, modificada (11)
 
     //preenchendo os vetores de acordo com a classe
     for (int i = 0; i < nPages; i++){
@@ -78,41 +93,48 @@ int NRU(Frame* tablePages, int* pages, int nPages){
         int current_page = pages[i];
         
         if (tablePages[current_page].R == 0 && tablePages[current_page].M == 0){ //c0 (r = 0, m = 0)
-            c0[c1_index] = i; //coloca o indice emento na lista da classe 1
+            c0[c1_index] = i; //coloca o indice emento na lista da classe 0
             c0_index++;
-           
         }
 
         else if (tablePages[current_page].R == 0 && tablePages[current_page].M == 1){ //c1 (r = 0, m = 1)
-            c1[c1_index] = i; //coloca o indice emento na lista da classe 2
+            c1[c1_index] = i; //coloca o indice emento na lista da classe 1
             c1_index++;
-            
         }
 
         else if (tablePages[current_page].R == 1 && tablePages[current_page].M == 0){ //c2 (r = 1, m = 0)
             c2[c2_index] = i; //coloca o indice emento na lista da classe 2
             c2_index++;
-              
         }
+
         else{ //c3 (r = 1, m = 1)
-            c3[c3_index] = i; //coloca o indice emento na lista da classe 2
+            c3[c3_index] = i; //coloca o indice emento na lista da classe 3
             c3_index++;  
-            
         }
-    
-        
-
-
-    
-    
-    
     }
-    
-
-
-
-
-
+    //Escolhendo a categoria da página que vai ser retirada
+    int *vet;
+    int size_index;
+    if (!emptyPages(c0)){
+        vet = c0;
+        size_index = c0_index;
+    }
+    else if (!emptyPages(c1)){
+        vet = c1;
+        size_index = c0_index;
+    }
+    else if (!emptyPages(c2)){
+        vet = c2;
+        size_index = c2_index;
+    }
+    else{
+        vet = c3;
+        size_index = c3_index;
+    }
+    //A página que vai ser retirada.
+    int pos;
+    pos = indexRandom(size_index);
+    return vet[pos];
 }
 
 int pageFIFO2(){
