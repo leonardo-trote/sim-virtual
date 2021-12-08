@@ -5,7 +5,9 @@ Ricardo Matheus de Oliveira Amaral		1621644
 
 #include <stdio.h>
 #include <stdlib.h>
-#include<time.h>
+#include <time.h>
+#include <math.h>
+#include <string.h>
 #include "sim.h"
 
 #define N 32 // leituras para zerar o bit no NRU.
@@ -67,6 +69,8 @@ Frame * createTable(int pageSize){
         tbps[i].M = 0;
         tbps[i].lastAcess = -1; //ainda nao foi acessada
         tbps[i].indexPage = -1; //ainda nao ta na memoria
+        tbps[i].lastLoad = -1; //tempo que foi colocado na memoria
+        tbps[i].frequency = 0; //frequencia de acesso
     }
 
     return tbps;
@@ -138,9 +142,34 @@ int search_index_NRU(Frame* tablePages, int* pages, int nPages){
     pos = indexRandom(size_index);
     return vet[pos];
 }
+/*
+int pageFIFO2(Frame* tablePages, int* pages, int nPages){
 
-int pageFIFO2(){
+    //o bit R do primeiro (mais antigo) indice da lista é 0, entao remove esse mesmo
+    if (tablePages[pages[0]].R == 0){
+        return 0; //esse é o indice da pagina que vai ser removid0
+    }
 
+    //se for 1, então limpa e coloca no final
+    
+
+    for (i = 0; i< nPages; i++){
+
+        int current_page = pages[i];
+        if (tablePages[current_page].R == 1){
+
+
+        }
+
+
+
+    }
+
+
+
+
+
+    }
 
 
 
@@ -154,7 +183,7 @@ int pageLFU(){
 
     
 }
-
+*/
 void reset_bits(Frame* tablePages, int * pages, int nPages){
     int index_TPage;
     for (int i = 0; i < nPages; i++){
@@ -167,7 +196,7 @@ void reset_bits(Frame* tablePages, int * pages, int nPages){
 void remove_page(Frame* tablePages, int * pages, int index_Tpage, int index_Vpage){
     tablePages[pages[index_Vpage]].R = 0;
     tablePages[pages[index_Vpage]].M = 0;
-    tablePages[pages[index_Vpage]].lastAcess = -1;
+    tablePages[pages[index_Vpage]].lastLoad = -1;
     tablePages[index_Tpage].indexPage = pages[index_Vpage];
     pages[index_Vpage] = index_Tpage;
 }
@@ -180,7 +209,9 @@ void run_simulator(FILE *arqE, char* type, int size_page, int size_memory){
         offset = (int)(ceil(log2(size_page * 1024))), // 1 MB = 1024KB
         time_zeroBits = 0,
         n_pos = 0,
-        runtime = 0;
+        runtime = 0,
+        n_missingPages = 0,
+        n_writtenPages = 0;
     unsigned int addr;
 	char rw;
     int* pages;
@@ -190,14 +221,15 @@ void run_simulator(FILE *arqE, char* type, int size_page, int size_memory){
     tablePages = createTable(size_page);
     pages = createPages(n_pages);
 
-    while(fscanf(arqE, "%x %c", &addr, &rw) == 2) {
+    while(fscanf(arqE, "%x %c", &addr, &rw) != EOF) {
         if (!strcmp(type,"NRU") && time_zeroBits == N){
             reset_bits(tablePages, pages, n_pages);
             time_zeroBits = 0;
         }
         index_Tpage = addr >> offset;
-        in_memory = tablePages[index_Tpage].indexPage; // -1 não está na memoria
+        in_memory = tablePages[index_Tpage].indexPage; // -1 não está na memoria, -1 -> falta página
         if (in_memory == -1){
+            n_missingPages++;
             //Verifica se precisamos remover uma página.
             if (n_pos < n_pages){//ñ precisa remover
                 pages[n_pos] = index_Tpage;
@@ -205,23 +237,68 @@ void run_simulator(FILE *arqE, char* type, int size_page, int size_memory){
                 n_pos++;
             }
             else{ // precisa remover
-                int aux, index_Vpage;
+                int index_Vpage;
                 if (!strcmp(type, "NRU")){
                     index_Vpage = search_index_NRU(tablePages, pages, n_pages);
                 }
-                aux = pages[index_Vpage];
+                int aux = pages[index_Vpage];
+                if (tablePages[aux].M == 1){
+                    n_writtenPages++;
+                }
                 remove_page(tablePages, pages, index_Tpage, index_Vpage); 
             }
         }
         tablePages[index_Tpage].R = 1;
-        if (!strcmp(rw, "W")){
+        if (rw == 'W'){
             tablePages[index_Tpage].M = 1;
-        }
+        } 
         tablePages[index_Tpage].lastAcess = runtime;
         time_zeroBits++;
         runtime++;
     }
     //printar informações necessárias para o trabalho.
+    printf("Número de Faltas de Páginas: %d\n", n_missingPages);
+    printf("Número de Páginas Escritas: %d\n", n_writtenPages);
+    //3free(pages);
     free(tablePages);
-    free(pages);
+     //Ta dando erro aqui mas não sei o porquê.
+}
+
+int main(int argc, char *argv[]) {
+	
+	FILE *arqE;
+	char type[4], caminho[50] = "testes/";
+	int size_page, size_memory;
+
+	if(argc < 5) {
+		printf("Quantidade inválida de parâmetros!\n");
+		printf("Exemplo: sim-virtual LFU arquivo.log 8 16\n");
+		exit(1);
+	}
+
+	strcpy(type, argv[1]);
+	size_page = atoi(argv[3]); 
+	size_memory = atoi(argv[4]);
+	strcat(caminho, argv[2]);
+	arqE = fopen(caminho,"r");
+    printf("%s\n",caminho);
+	if (!arqE) {
+    	printf("Erro ao abrir arquivo!\n");
+    	exit(1);
+	}
+	
+	checkInput(type, size_page, size_memory);
+
+	printf("\nExecutando o simulador...\n");
+	printf("Arquivo de entrada: %s\n", argv[2]);
+	printf("Tamanho da memória física: %d MB\n", size_memory);
+	printf("Tamanho das páginas: %d KB\n", size_page);
+	printf("Algoritmo de substituição: %s\n", type);
+    	
+	//executaSimuladorVirtual(arq, tipoAlg, tamPagina, tamMemFis);
+    run_simulator(arqE, type, size_page, size_memory);
+	fclose(arqE);
+	
+	return 0;
+
 }
