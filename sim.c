@@ -118,6 +118,7 @@ int search_index_NRU(Frame* tablePages, int* pages, int nPages){
             c3_index++;  
         }
     }
+
     //Escolhendo a categoria da página que vai ser retirada
     int *vet;
     int size_index;
@@ -143,16 +144,12 @@ int search_index_NRU(Frame* tablePages, int* pages, int nPages){
     return vet[pos];
 }
 
-
 int pageFIFO2(Frame* tablePages, int* pages, int nPages){
 
     //o bit R do primeiro (mais antigo) indice da lista é 0, entao remove esse mesmo
     if (tablePages[pages[0]].R == 0){
         return 0; //esse é o indice da pagina que vai ser removid0
-    }
-
-
-    
+    }    
 
     //se for 1, então limpa e coloca no final
     for (int i = 0; i< nPages; i++){
@@ -175,7 +172,6 @@ int pageFIFO2(Frame* tablePages, int* pages, int nPages){
 
 
 int pageLFU(Frame* tablePages, int* pages, int nPages){
-
 
     int smallerFrequency = -1;
     int smallerIndex = 0;
@@ -259,9 +255,12 @@ void run_simulator(FILE *arqE, char* type, int size_page, int size_memory){
             }
         }
         tablePages[index_Tpage].R = 1;
+        tablePages[index_Tpage].frequency++;
+
         if (rw == 'W'){
             tablePages[index_Tpage].M = 1;
         } 
+        
         tablePages[index_Tpage].lastAcess = runtime;
         time_zeroBits++;
         runtime++;
