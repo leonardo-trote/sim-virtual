@@ -8,6 +8,8 @@ Ricardo Matheus de Oliveira Amaral		1621644
 #include<time.h>
 #include "sim.h"
 
+#define N 32 // leituras para zerar o bit no NRU.
+
 int t_time = 0, nPages;
 
 
@@ -76,8 +78,8 @@ int indexRandom(int n){
     return rand() % n;
 }
 
-//retorna a pagina da classe menos 'importante' de forma aleatória
-int NRU(Frame* tablePages, int* pages, int nPages){
+//retorna o index da pagina da classe menos 'importante' de forma aleatória
+int search_index_NRU(Frame* tablePages, int* pages, int nPages){
 
     int c0_index = 0, c1_index = 0, c2_index = 0, c3_index = 0; // tamanho dos vetores.
 
@@ -148,3 +150,55 @@ int pageLFU(){
     
 }
 
+void run_simulator(FILE *arqE, char* type, int size_page, int size_memory){
+    //n_pages = Quantidade de páginas.
+    int index_Tpage, 
+        n_pages,
+        in_memory,
+        offset = (int)(ceil(log2(size_page * 1000))),
+        time_zeroBits = 0,
+        n_pos = 0,
+        runtime = 0;
+    unsigned int addr;
+	char rw;
+    int* pages;
+    Frame* tablePages;
+    
+    n_pages = (size_memory * 1000) / size_page;
+    tablePages = createTable(size_page);
+    pages = createPages(n_pages);
+    while(fscanf(arqE, "%x %c", &addr, &rw) == 2) {
+        if (!strcmp(type,"NRU") && time_zeroBits == N){
+            //código para zerar os bits
+            time_zeroBits = 0;
+        }
+        index_Tpage = addr >> offset;
+        in_memory = tablePages[index_Tpage].indexPage; // -1 não está na memoria
+        if (in_memory == -1){
+            //Verifica se precisamos remover uma página.
+            if (n_pos < n_pages){//ñ precisa remover
+                pages[n_pos] = index_Tpage;
+                tablePages[index_Tpage].indexPage = n_pos;
+                n_pos++;
+            }
+            else{ // precisa remover
+                int aux, index_Vpage;
+                if (!strcmp(type, "NRU")){
+                    index_Vpage = search_index_NRU(tablePages, pages, n_pages);
+                }
+                aux = pages[index_Vpage];
+                //função para remover a página 
+            }
+
+        }
+        tablePages[index_Tpage].R = 1;
+        if (!strcmp(rw, "W")){
+            tablePages[index_Tpage].M = 1;
+        }
+        tablePages[index_Tpage].lastAcess = runtime;
+        time_zeroBits++;
+        runtime++;
+    }
+    free(tablePages);
+    free(pages);
+}

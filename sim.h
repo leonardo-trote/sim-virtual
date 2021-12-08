@@ -2,8 +2,8 @@ typedef struct frame{
 
     int R;
     int M;
-    int lastAcess;
+    int lastAcess; // tempo do último acesso.
 
-    int indexPage;
+    int indexPage; // vp
 
 } Frame;
