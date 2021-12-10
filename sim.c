@@ -17,7 +17,7 @@ int runtime = 0;
 
 void checkInput(char* alg, int pageSize, int memorySize){
 
-    if (strcmp(alg,"NRU") != 0 && strcmp(alg,"FIFO") != 0 && strcmp(alg,"LFU") != 0){
+    if (strcmp(alg,"NRU") != 0 && strcmp(alg,"FIFO2") != 0 && strcmp(alg,"LFU") != 0){
         printf("Algoritmo inválido. Deve ser NRU, FIFO2 ou LFU\n");
         exit(1);
     }
@@ -86,8 +86,6 @@ int indexRandom(int n){
 int search_index_NRU(Frame* tablePages, int* pages, int nPages){
 
     int c0_index = 0, c1_index = 0, c2_index = 0, c3_index = 0; // tamanho dos vetores.
-
-
     int *c0 = createPages(nPages); //classe 1 - não referenciada, não modificada (00)
     int *c1 = createPages(nPages); //classe 2 - não referenciada, modificada (01)
     int *c2 = createPages(nPages); //classe 3 - referenciada, não modificada (10)
@@ -147,19 +145,19 @@ int search_index_NRU(Frame* tablePages, int* pages, int nPages){
 int pageFIFO2(Frame* tablePages, int* pages, int nPages){
     int smallerIndex = 0;
     int current_page = pages[0];
-    int time_menor = tablePages[current_page].lastAcess;
+    int time_menor = tablePages[current_page].lastLoad;
     while (1){
         for (int i = 0; i < nPages; i++){
             current_page = pages[i];
-            if (time_menor > tablePages[current_page].lastAcess){
+            if (time_menor > tablePages[current_page].lastLoad){
                 smallerIndex = i;
-                time_menor = tablePages[current_page].lastAcess;
+                time_menor = tablePages[current_page].lastLoad;
             }
         }
         current_page = pages[smallerIndex];
         if (tablePages[current_page].R != 0){
             tablePages[current_page].R = 0;
-            tablePages[current_page].lastAcess = runtime;            
+            tablePages[current_page].lastLoad = runtime;            
         }
         else{
             return smallerIndex;
@@ -174,7 +172,6 @@ int pageLFU(Frame* tablePages, int* pages, int nPages){
     int smallerIndex = 0;
     int current_page = pages[0];
     int smallerFrequency = tablePages[current_page].frequency;
-
     //percote todas as paginas e retorna o index da que tem menor frequencia
     for(int i = 0; i < nPages; i++){
         
@@ -248,7 +245,7 @@ void run_simulator(FILE *arqE, char* type, int size_page, int size_memory){
                 else if (!strcmp(type, "NRU")){
                     index_Vpage = search_index_NRU(tablePages, pages, n_pages);
                 }
-                else if (!strcmp(type, "FIFO")){
+                else if (!strcmp(type, "FIFO2")){
                     index_Vpage = pageFIFO2(tablePages, pages, n_pages);   
                 }
                 int aux = pages[index_Vpage];
@@ -260,7 +257,10 @@ void run_simulator(FILE *arqE, char* type, int size_page, int size_memory){
         }
         tablePages[index_Tpage].R = 1;
         tablePages[index_Tpage].frequency++;
-
+        //Caso não tenha sido carregado na memória ainda
+        if (tablePages[index_Tpage].lastLoad == -1){ 
+            tablePages[index_Tpage].lastLoad = runtime;
+        }
         if (rw == 'W'){
             tablePages[index_Tpage].M = 1;
         } 
