@@ -43,7 +43,6 @@ int main(int argc, char *argv[]) {
 	size_memory = atoi(argv[4]);
     strcat(caminho, argv[2]);
 	arqE = fopen(caminho,"r");
-    printf("%s\n",caminho);
 	if (!arqE) 
     {
     	printf("Erro ao abrir arquivo!\n");
@@ -59,7 +58,7 @@ int main(int argc, char *argv[]) {
     	
 	//executaSimuladorVirtual(arq, tipoAlg, tamPagina, tamMemFis);
     run_simulator(arqE, type, size_page, size_memory);
-	
+	printf("\n");
     fclose(arqE);
 	
 	return 0;
