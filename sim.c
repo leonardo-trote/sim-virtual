@@ -18,11 +18,11 @@ void checkInput(char* alg, int pageSize, int memorySize)
         printf("Algoritmo inválido. Deve ser NRU, FIFO2 ou LFU\n");
         exit(1);
     }
-    if (pageSize < 8 || pageSize > 32){
+    else if (pageSize < 8 || pageSize > 32){
         printf("Tamanho de página inválido. Deve ser um valor inteiro entre 8 e 32\n"); 
         exit(1);
     }
-    if (memorySize < 1 || memorySize > 16){
+    else if (memorySize < 1 || memorySize > 16){
         printf("Tamanho de memória inválido. Deve ser um valor inteiro entre 1 e 16");  
         exit(1);
     }
@@ -41,7 +41,8 @@ int * createPages(int nPages)
 //verifica se a lista de páginas está vazia.
 int emptyPages(int *pages)
 {
-    if (pages[0] == -1){
+    if (pages[0] == -1)
+    {
         return 1;
     }
     return 0;
@@ -84,22 +85,22 @@ int search_index_NRU(Frame* tablePages, int* pages, int nPages)
         int current_page = pages[i];
         if (tablePages[current_page].R == 0 && tablePages[current_page].M == 0) //c0 (r = 0, m = 0)
         { 
-            c0[c1_index] = i; //coloca o indice emento na lista da classe 0
+            c0[c1_index] = i; //coloca o indice na lista da classe 0
             c0_index++;
         }
         else if (tablePages[current_page].R == 0 && tablePages[current_page].M == 1)  //c1 (r = 0, m = 1)
         {
-            c1[c1_index] = i; //coloca o indice emento na lista da classe 1
+            c1[c1_index] = i; //coloca o indice na lista da classe 1
             c1_index++;
         }
         else if (tablePages[current_page].R == 1 && tablePages[current_page].M == 0) //c2 (r = 1, m = 0)
         { 
-            c2[c2_index] = i; //coloca o indice emento na lista da classe 2
+            c2[c2_index] = i; //coloca o indice na lista da classe 2
             c2_index++;
         }
         else //c3 (r = 1, m = 1)
         { 
-            c3[c3_index] = i; //coloca o indice emento na lista da classe 3
+            c3[c3_index] = i; //coloca o indice na lista da classe 3
             c3_index++;  
         }
     }
@@ -224,7 +225,7 @@ void run_simulator(FILE *arqE, char* type, int size_page, int size_memory)
         index_Tpage = addr >> offset;
         in_memory = tablePages[index_Tpage].indexPage; // -1 não está na memoria, -1 -> falta página
         if (in_memory == -1)
-        {
+        {   
             n_missingPages++;
             //Verifica se precisamos remover uma página.
             if (n_pos < n_pages) //ñ precisa remover
