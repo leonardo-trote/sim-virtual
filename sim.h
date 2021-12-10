@@ -1,3 +1,4 @@
+#include<stdio.h>
 typedef struct frame{
 
     int R;
@@ -9,3 +10,6 @@ typedef struct frame{
     
     
 } Frame;
+
+
+void run_simulator(FILE *arqE, char* type, int size_page, int size_memory);

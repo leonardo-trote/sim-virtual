@@ -2,8 +2,7 @@
 Leonardo Trote Martins				1620572		
 Ricardo Matheus de Oliveira Amaral		1621644	
 */
-
-#include <stdio.h>
+#include<stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
@@ -13,12 +12,12 @@ Ricardo Matheus de Oliveira Amaral		1621644
 #define N 32 // leituras para zerar o bit no NRU.
 int runtime = 0;
 
-
-
 void checkInput(char* alg, int pageSize, int memorySize){
+
 
     if (strcmp(alg,"NRU") != 0 && strcmp(alg,"FIFO2") != 0 && strcmp(alg,"LFU") != 0){
         printf("Algoritmo inválido. Deve ser NRU, FIFO2 ou LFU\n");
+
         exit(1);
     }
 
@@ -33,12 +32,11 @@ void checkInput(char* alg, int pageSize, int memorySize){
     }
 }
 
-
 int * createPages(int nPages){
 
     int * pages = (int * )malloc(sizeof(int)*nPages);
 
-    // - 1 | -1 | -1 | -1 |
+    //array só de -1
     for (int i = 0; i < nPages; i++){
         pages[i] = -1; //inicialmente não está na memória
     }
@@ -86,10 +84,12 @@ int indexRandom(int n){
 int search_index_NRU(Frame* tablePages, int* pages, int nPages){
 
     int c0_index = 0, c1_index = 0, c2_index = 0, c3_index = 0; // tamanho dos vetores.
+
     int *c0 = createPages(nPages); //classe 1 - não referenciada, não modificada (00)
     int *c1 = createPages(nPages); //classe 2 - não referenciada, modificada (01)
     int *c2 = createPages(nPages); //classe 3 - referenciada, não modificada (10)
     int *c3 = createPages(nPages); //classe 4 - referenciada, modificada (11)
+
 
     //preenchendo os vetores de acordo com a classe
     for (int i = 0; i < nPages; i++){
@@ -142,7 +142,7 @@ int search_index_NRU(Frame* tablePages, int* pages, int nPages){
     return vet[pos];
 }
 
-int pageFIFO2(Frame* tablePages, int* pages, int nPages){
+int search_index_FIFO2(Frame* tablePages, int* pages, int nPages){
     int smallerIndex = 0;
     int current_page = pages[0];
     int time_menor = tablePages[current_page].lastLoad;
@@ -166,8 +166,7 @@ int pageFIFO2(Frame* tablePages, int* pages, int nPages){
     }
 }
 
-
-int pageLFU(Frame* tablePages, int* pages, int nPages){
+int search_index_LFU(Frame* tablePages, int* pages, int nPages){
     
     int smallerIndex = 0;
     int current_page = pages[0];
@@ -240,13 +239,15 @@ void run_simulator(FILE *arqE, char* type, int size_page, int size_memory){
             else{ // precisa remover
                 int index_Vpage;
                 if (!strcmp(type, "LFU")){
-                    index_Vpage = pageLFU(tablePages, pages, n_pages);
+                    index_Vpage = search_index_LFU(tablePages, pages, n_pages);
                 }
                 else if (!strcmp(type, "NRU")){
                     index_Vpage = search_index_NRU(tablePages, pages, n_pages);
                 }
+
                 else if (!strcmp(type, "FIFO2")){
-                    index_Vpage = pageFIFO2(tablePages, pages, n_pages);   
+                    index_Vpage = search_index_FIFO2(tablePages, pages, n_pages);   
+
                 }
                 int aux = pages[index_Vpage];
                 if (tablePages[aux].M == 1){
@@ -255,24 +256,33 @@ void run_simulator(FILE *arqE, char* type, int size_page, int size_memory){
                 remove_page(tablePages, pages, index_Tpage, index_Vpage); 
             }
         }
+
         tablePages[index_Tpage].R = 1;
         tablePages[index_Tpage].frequency++;
         //Caso não tenha sido carregado na memória ainda
         if (tablePages[index_Tpage].lastLoad == -1){ 
             tablePages[index_Tpage].lastLoad = runtime;
         }
+
         if (rw == 'W'){
             tablePages[index_Tpage].M = 1;
         } 
-        
+
+        tablePages[index_Tpage].frequency++;
         tablePages[index_Tpage].lastAcess = runtime;
+        
+        if (tablePages[index_Tpage].lastLoad == -1){
+            tablePages[index_Tpage].lastLoad = runtime;     
+        }
+        
+        
         time_zeroBits++;
         runtime++;
     }
     //printar informações necessárias para o trabalho.
     printf("Número de Faltas de Páginas: %d\n", n_missingPages);
     printf("Número de Páginas Escritas: %d\n", n_writtenPages);
-    //3free(pages);
+    //free(pages);
     //free(tablePages);
      //Ta dando erro aqui mas não sei o porquê.
 }
