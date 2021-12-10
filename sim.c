@@ -8,9 +8,65 @@ Ricardo Matheus de Oliveira Amaral		1621644
 #include <math.h>
 #include <string.h>
 #include "sim.h"
-
 #define N 32 // leituras para zerar o bit no NRU.
+
+void checkInput(char* alg, int pageSize, int memorySize);
+int * createPages(int nPages);
+void reset_bits(Frame* tablePages, int * pages, int nPages);
+int emptyPages(int *pages);
+Frame * createTable(int pageSize);
+int indexRandom(int n);
+void remove_page(Frame* tablePages, int * pages, int index_Tpage, int index_Vpage);
+int search_index_NRU(Frame* tablePages, int* pages, int nPages);
+int search_index_FIFO2(Frame* tablePages, int* pages, int nPages);
+void run_simulator(FILE *arqE, char* type, int size_page, int size_memory);
+
+
 int runtime = 0;
+
+int main(int argc, char *argv[]) {
+	
+	FILE *arqE;
+	char *type, caminho[50] = "testes/";
+	int size_page, size_memory;
+
+	if(argc < 5) 
+    {
+		printf("Quantidade inválida de parâmetros!\n");
+		printf("Exemplo: sim-virtual LFU arquivo.log 8 16\n");
+		exit(1);
+	}
+
+    type = (char*)malloc(strlen(argv[1]) + 1);
+	strcpy(type, argv[1]);
+	size_page = atoi(argv[3]); 
+	size_memory = atoi(argv[4]);
+    strcat(caminho, argv[2]);
+	arqE = fopen(caminho,"r");
+    printf("%s\n",caminho);
+	if (!arqE) 
+    {
+    	printf("Erro ao abrir arquivo!\n");
+    	exit(1);
+	}
+    checkInput(type, size_page, size_memory);
+	
+    printf("\nExecutando o simulador...\n");
+	printf("Arquivo de entrada: %s\n", argv[2]);
+	printf("Tamanho da memória física: %d MB\n", size_memory);
+	printf("Tamanho das páginas: %d KB\n", size_page);
+	printf("Algoritmo de substituição: %s\n", type);
+    	
+	//executaSimuladorVirtual(arq, tipoAlg, tamPagina, tamMemFis);
+    run_simulator(arqE, type, size_page, size_memory);
+	
+    fclose(arqE);
+	
+	return 0;
+}
+
+
+
 
 void checkInput(char* alg, int pageSize, int memorySize)
 {
@@ -193,6 +249,7 @@ void reset_bits(Frame* tablePages, int * pages, int nPages)
         }
     }
 }
+
 void remove_page(Frame* tablePages, int * pages, int index_Tpage, int index_Vpage)
 {
     tablePages[pages[index_Vpage]].R = 0;
@@ -282,43 +339,3 @@ void run_simulator(FILE *arqE, char* type, int size_page, int size_memory)
     printf("Número de Páginas Escritas: %d\n", n_writtenPages);
 }
 
-int main(int argc, char *argv[]) {
-	
-	FILE *arqE;
-	char *type, caminho[50] = "testes/";
-	int size_page, size_memory;
-
-	if(argc < 5) 
-    {
-		printf("Quantidade inválida de parâmetros!\n");
-		printf("Exemplo: sim-virtual LFU arquivo.log 8 16\n");
-		exit(1);
-	}
-
-    type = (char*)malloc(strlen(argv[1]) + 1);
-	strcpy(type, argv[1]);
-	size_page = atoi(argv[3]); 
-	size_memory = atoi(argv[4]);
-    strcat(caminho, argv[2]);
-	arqE = fopen(caminho,"r");
-    printf("%s\n",caminho);
-	if (!arqE) 
-    {
-    	printf("Erro ao abrir arquivo!\n");
-    	exit(1);
-	}
-    checkInput(type, size_page, size_memory);
-	
-    printf("\nExecutando o simulador...\n");
-	printf("Arquivo de entrada: %s\n", argv[2]);
-	printf("Tamanho da memória física: %d MB\n", size_memory);
-	printf("Tamanho das páginas: %d KB\n", size_page);
-	printf("Algoritmo de substituição: %s\n", type);
-    	
-	//executaSimuladorVirtual(arq, tipoAlg, tamPagina, tamMemFis);
-    run_simulator(arqE, type, size_page, size_memory);
-	
-    fclose(arqE);
-	
-	return 0;
-}
