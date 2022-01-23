@@ -2,6 +2,7 @@
 Leonardo Trote Martins				1620572		
 Ricardo Matheus de Oliveira Amaral		1621644	
 */
+
 #include<stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -20,7 +21,6 @@ void remove_page(Frame* tablePages, int * pages, int index_Tpage, int index_Vpag
 int search_index_NRU(Frame* tablePages, int* pages, int nPages);
 int search_index_FIFO2(Frame* tablePages, int* pages, int nPages);
 void run_simulator(FILE *arqE, char* type, int size_page, int size_memory);
-
 
 int runtime = 0;
 
@@ -63,9 +63,6 @@ int main(int argc, char *argv[]) {
 	
 	return 0;
 }
-
-
-
 
 void checkInput(char* alg, int pageSize, int memorySize)
 {
@@ -337,4 +334,3 @@ void run_simulator(FILE *arqE, char* type, int size_page, int size_memory)
     printf("Número de Faltas de Páginas: %d\n", n_missingPages);
     printf("Número de Páginas Escritas: %d\n", n_writtenPages);
 }
-
